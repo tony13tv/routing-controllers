@@ -1,9 +1,10 @@
 import * as path from 'path';
+import glob from 'glob';
 
 /**
  * Loads all exported classes from the given directory.
  */
-export function importClassesFromDirectories(directories: string[], formats = ['.js', '.ts', '.tsx']): Function[] {
+export async function importClassesFromDirectories(directories: string[], formats = ['.js', '.mjs', '.jsx', '.ts', '.mts', '.tsx']): Function[] {
   const loadFileClasses = function (exported: any, allLoaded: Function[]) {
     if (exported instanceof Function) {
       allLoaded.push(exported);
@@ -18,17 +19,17 @@ export function importClassesFromDirectories(directories: string[], formats = ['
 
   const allFiles = directories.reduce((allDirs, dir) => {
     // Replace \ with / for glob
-    return allDirs.concat(require('glob').sync(path.normalize(dir).replace(/\\/g, '/')));
+    return allDirs.concat(glob.sync(path.normalize(dir).replace(/\\/g, '/')));
   }, [] as string[]);
 
-  const dirs = allFiles
+  const dirs = await Promise.all(allFiles
     .filter(file => {
       const dtsExtension = file.substring(file.length - 5, file.length);
       return formats.indexOf(path.extname(file)) !== -1 && dtsExtension !== '.d.ts';
     })
     .map(file => {
-      return require(file);
-    });
+      return await import(file);
+    }));
 
   return loadFileClasses(dirs, []);
 }
