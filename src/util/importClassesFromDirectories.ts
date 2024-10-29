@@ -1,5 +1,5 @@
 import * as path from 'path';
-import glob from 'glob';
+const glob = await import('glob');
 
 /**
  * Loads all exported classes from the given directory.
@@ -27,7 +27,7 @@ export async function importClassesFromDirectories(directories: string[], format
       const dtsExtension = file.substring(file.length - 5, file.length);
       return formats.indexOf(path.extname(file)) !== -1 && dtsExtension !== '.d.ts';
     })
-    .map(file => {
+    .map(async file => {
       return await import(file);
     }));
 
